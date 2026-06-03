@@ -20,9 +20,10 @@ class RoleAndAdminSeeder extends Seeder
         $this->command->info('Roles berhasil dibuat: ' . implode(', ', $roles));
 
         $admin = User::firstOrCreate(
-            ['email' => 'admin@alhaq.com'],
+            ['email' => 'admin@batamerah.id'],
             [
                 'name' => 'Super Admin',
+                'whatsapp_number' => '08112841212',
                 'password' => Hash::make('admin@1234'),
             ]
         );
@@ -30,7 +31,8 @@ class RoleAndAdminSeeder extends Seeder
         $admin->assignRole('superadmin');
 
         $this->command->info('Akun admin berhasil dibuat:');
-        $this->command->info('  Email   : admin@alhaq.com');
+        $this->command->info('  Email   : admin@batamerah.id');
+        $this->command->info('  No WA   : 08112841212');
         $this->command->info('  Password: admin@1234');
     }
 }
