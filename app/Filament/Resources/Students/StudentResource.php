@@ -9,10 +9,19 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Filament\Schemas\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\TextColumn;
 
 class StudentResource extends Resource
 {
@@ -28,40 +37,40 @@ class StudentResource extends Resource
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Select::make('user_id')
+                Select::make('user_id')
                     ->relationship('user', 'name')
                     ->label('Siswa Mandiri (User)'),
-                \Filament\Forms\Components\Select::make('parent_id')
+                Select::make('parent_id')
                     ->relationship('parent', 'name')
                     ->label('Orang Tua (User)'),
-                \Filament\Forms\Components\TextInput::make('full_name')
+                TextInput::make('full_name')
                     ->required()
                     ->maxLength(255)
                     ->label('Nama Lengkap'),
-                \Filament\Forms\Components\TextInput::make('nickname')
+                TextInput::make('nickname')
                     ->maxLength(255)
                     ->label('Nama Panggilan'),
-                \Filament\Forms\Components\TextInput::make('birth_place')
+                TextInput::make('birth_place')
                     ->maxLength(255)
                     ->label('Tempat Lahir'),
-                \Filament\Forms\Components\DatePicker::make('birth_date')
+                DatePicker::make('birth_date')
                     ->label('Tanggal Lahir'),
-                \Filament\Forms\Components\Select::make('gender')
+                Select::make('gender')
                     ->options([
                         'L' => 'Laki-laki',
                         'P' => 'Perempuan',
                     ])
                     ->label('Jenis Kelamin'),
-                \Filament\Forms\Components\TextInput::make('birth_order')
+                TextInput::make('birth_order')
                     ->numeric()
                     ->label('Anak Ke-'),
-                \Filament\Forms\Components\TextInput::make('sibling_count')
+                TextInput::make('sibling_count')
                     ->numeric()
                     ->label('Dari Bersaudara'),
-                \Filament\Forms\Components\Textarea::make('address')
+                Textarea::make('address')
                     ->columnSpanFull()
                     ->label('Alamat Lengkap'),
-                \Filament\Forms\Components\Textarea::make('medical_history')
+                Textarea::make('medical_history')
                     ->columnSpanFull()
                     ->label('Riwayat Penyakit'),
             ]);
@@ -71,26 +80,26 @@ class StudentResource extends Resource
     {
         return $table
             ->columns([
-                \Filament\Tables\Columns\TextColumn::make('full_name')
+                TextColumn::make('full_name')
                     ->label('Nama Lengkap')
                     ->searchable()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('parent.name')
-                    ->label('Orang Tua')
+                TextColumn::make('user.name')
+                    ->label('Nama Panggilan')
                     ->searchable()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('user.name')
-                    ->label('Siswa Mandiri')
+                TextColumn::make('parent.name')
+                    ->label('Nama Orang Tua')
                     ->searchable()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('gender')
+                TextColumn::make('gender')
                     ->label('Jenis Kelamin')
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'L' => 'Laki-laki',
                         'P' => 'Perempuan',
                         default => $state,
                     }),
-                \Filament\Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->label('Tgl Daftar')
                     ->dateTime()
                     ->sortable()
@@ -100,6 +109,7 @@ class StudentResource extends Resource
                 //
             ])
             ->recordActions([
+                ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
             ])
@@ -107,6 +117,54 @@ class StudentResource extends Resource
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
+            ]);
+    }
+    
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Section::make('Informasi Utama')
+                    ->description('Data identitas utama siswa.')
+                    ->components([
+                        Grid::make(2)
+                            ->components([
+                                TextEntry::make('full_name')->label('Nama Lengkap'),
+                                TextEntry::make('nickname')->label('Nama Panggilan'),
+                                TextEntry::make('parent.name')->label('Nama Orang Tua')
+                                    ->default('-'),
+                                TextEntry::make('user.email')->label('Email Siswa')
+                                    ->default('-'),
+                                TextEntry::make('gender')
+                                    ->label('Jenis Kelamin')
+                                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                                        'L' => 'Laki-laki',
+                                        'P' => 'Perempuan',
+                                        default => '-',
+                                    }),
+                            ]),
+                    ])->columnSpanFull(),
+                Section::make('Data Kelahiran & Keluarga')
+                    ->components([
+                        Grid::make(3)
+                            ->components([
+                                TextEntry::make('birth_place')->label('Tempat Lahir'),
+                                TextEntry::make('birth_date')
+                                    ->label('Tanggal Lahir')
+                                    ->date('d F Y'),
+                                TextEntry::make('birth_order')
+                                    ->label('Anak Ke-')
+                                    ->formatStateUsing(fn ($record) => $record->birth_order . ' dari ' . $record->sibling_count . ' bersaudara'),
+                            ]),
+                    ]),
+                Section::make('Informasi Tambahan')
+                    ->components([
+                        TextEntry::make('address')->label('Alamat Lengkap')->columnSpanFull(),
+                        TextEntry::make('medical_history')
+                            ->label('Riwayat Penyakit')
+                            ->columnSpanFull()
+                            ->default('Tidak ada riwayat penyakit.'),
+                    ]),
             ]);
     }
 
