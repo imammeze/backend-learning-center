@@ -7,6 +7,7 @@ use App\Models\Student;
 use Illuminate\Http\Request;
 use App\Http\Requests\Registration\RegisterChildRequest;
 use App\Services\RegistrationService;
+use Illuminate\Support\Facades\Hash;
 
 class ParentDashboardController extends Controller
 {
@@ -73,5 +74,39 @@ class ParentDashboardController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function updateAccount(Request $request, Student $student)
+    {
+        if ($student->parent_id !== $request->user()->id) {
+            abort(403, 'Anda tidak memiliki akses ke data ini.');
+        }
+
+        $validated = $request->validate([
+            'parent_password' => ['required', 'string'],
+            'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email,' . $student->user_id],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if (!Hash::check($validated['parent_password'], $request->user()->password)) {
+            return response()->json([
+                'message' => 'Password orang tua salah.',
+                'errors' => ['parent_password' => ['Password orang tua tidak sesuai.']]
+            ], 422);
+        }
+
+        $user = $student->user;
+        if (isset($validated['email'])) {
+            $user->email = $validated['email'];
+        }
+        if (isset($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+        }
+        $user->save();
+
+        return response()->json([
+            'message' => 'Akun anak berhasil diperbarui.',
+            'data' => $user
+        ]);
     }
 }
