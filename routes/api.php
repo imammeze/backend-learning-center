@@ -17,6 +17,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('parent')->group(function () {
         Route::get('/children', [ParentDashboardController::class, 'children']);
+        Route::post('/children/register', [ParentDashboardController::class, 'registerChild']);
         Route::get('/children/{student}/registrations', [ParentDashboardController::class, 'registrations']);
         Route::get('/children/{student}/grades', [ParentDashboardController::class, 'grades']);
         Route::get('/children/{student}/schedules', [ParentDashboardController::class, 'schedules']);

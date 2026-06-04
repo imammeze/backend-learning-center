@@ -171,4 +171,70 @@ class RegistrationService
             throw $e;
         }
     }
+    /**
+     * Register a new child for an existing parent.
+     *
+     * @param int $parentId Parent User ID
+     * @param array $data Validated data
+     * @return array
+     * @throws Exception
+     */
+    public function registerNewChild($parentId, array $data)
+    {
+        $program = Program::where('code', $data['program_code'])->first();
+        $parent = User::findOrFail($parentId);
+
+        try {
+            DB::beginTransaction();
+
+            // 1. Create Student User Account
+            $studentPassword = Str::random(10);
+            $studentUser = User::create([
+                'name' => $data['student_nickname'] ?? $data['student_full_name'],
+                'email' => $data['student_email'],
+                'password' => Hash::make($studentPassword),
+                'whatsapp_number' => null,
+            ]);
+            $studentUser->assignRole('siswa_mandiri');
+
+            // 2. Create Student
+            $student = Student::create([
+                'user_id' => $studentUser->id,
+                'parent_id' => $parent->id,
+                'full_name' => $data['student_full_name'],
+                'nickname' => $data['student_nickname'] ?? null,
+                'birth_place' => $data['birth_place'] ?? null,
+                'birth_date' => $data['birth_date'] ?? null,
+                'gender' => $data['gender'] ?? null,
+                'birth_order' => $data['birth_order'] ?? null,
+                'sibling_count' => $data['sibling_count'] ?? null,
+                'address' => $data['address'] ?? null,
+                'medical_history' => $data['medical_history'] ?? null,
+            ]);
+
+            // 3. Create Registration
+            $registration = Registration::create([
+                'student_id' => $student->id,
+                'program_id' => $program->id,
+                'status' => 'pending',
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            DB::commit();
+
+            // 4. Send Email to Parent
+            Mail::to($parent->email)->send(new StudentAccountCreated($studentUser, $studentPassword));
+
+            return [
+                'data' => [
+                    'student' => $student,
+                    'registration' => $registration
+                ]
+            ];
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
 }

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use App\Http\Requests\Registration\RegisterChildRequest;
+use App\Services\RegistrationService;
 
 class ParentDashboardController extends Controller
 {
@@ -54,5 +56,22 @@ class ParentDashboardController extends Controller
             'data' => [],
             'message' => 'Fitur jadwal akan segera tersedia.',
         ]);
+    }
+
+    public function registerChild(RegisterChildRequest $request, RegistrationService $registrationService)
+    {
+        try {
+            $result = $registrationService->registerNewChild($request->user()->id, $request->validated());
+
+            return response()->json([
+                'message' => 'Anak berhasil didaftarkan.',
+                'data' => $result['data']
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat mendaftarkan anak.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
