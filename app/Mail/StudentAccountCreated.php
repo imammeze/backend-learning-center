@@ -18,6 +18,7 @@ class StudentAccountCreated extends Mailable
      */
     public $studentUser;
     public $plainPassword;
+    public $token;
 
     /**
      * Create a new message instance.
@@ -26,6 +27,7 @@ class StudentAccountCreated extends Mailable
     {
         $this->studentUser = $studentUser;
         $this->plainPassword = $plainPassword;
+        $this->token = \Illuminate\Support\Facades\Password::createToken($studentUser);
     }
 
     /**

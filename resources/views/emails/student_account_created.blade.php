@@ -82,6 +82,11 @@
             font-weight: bold;
             font-size: 16px;
         }
+        .button-outline {
+            background-color: transparent;
+            color: #881337 !important;
+            border: 2px solid #881337;
+        }
         .alert {
             background-color: #fffbeb;
             border-left: 4px solid #f59e0b;
@@ -129,7 +134,8 @@
             </div>
 
             <div class="button-container">
-                <a href="{{ config('app.url') }}/login" class="button">Masuk ke Dashboard</a>
+                <a href="{{ env('FRONTEND_URL', 'http://localhost:3000') }}/login" class="button" style="margin-bottom: 10px;">Masuk ke Dashboard</a>
+                <a href="{{ env('FRONTEND_URL', 'http://localhost:3000') }}/reset-password?email={{ urlencode($studentUser->email) }}&token={{ $token }}" class="button button-outline" style="margin-bottom: 10px;">Update Password Anak</a>
             </div>
         </div>
 
