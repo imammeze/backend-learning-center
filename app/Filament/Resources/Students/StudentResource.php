@@ -99,6 +99,9 @@ class StudentResource extends Resource
                         'P' => 'Perempuan',
                         default => $state,
                     }),
+                TextColumn::make('age')
+                    ->label('Umur')
+                    ->getStateUsing(fn ($record) => $record->birth_date ? \Carbon\Carbon::parse($record->birth_date)->age . ' Tahun' : '-'),
                 TextColumn::make('created_at')
                     ->label('Tgl Daftar')
                     ->dateTime()
@@ -146,12 +149,15 @@ class StudentResource extends Resource
                     ])->columnSpanFull(),
                 Section::make('Data Kelahiran & Keluarga')
                     ->components([
-                        Grid::make(3)
+                        Grid::make(4)
                             ->components([
                                 TextEntry::make('birth_place')->label('Tempat Lahir'),
                                 TextEntry::make('birth_date')
                                     ->label('Tanggal Lahir')
                                     ->date('d F Y'),
+                                TextEntry::make('age')
+                                    ->label('Umur')
+                                    ->getStateUsing(fn ($record) => $record->birth_date ? \Carbon\Carbon::parse($record->birth_date)->age . ' Tahun' : '-'),
                                 TextEntry::make('birth_order')
                                     ->label('Anak Ke-')
                                     ->formatStateUsing(fn ($record) => $record->birth_order . ' dari ' . $record->sibling_count . ' bersaudara'),
