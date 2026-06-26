@@ -8,8 +8,12 @@ use App\Http\Controllers\Api\ParentDashboardController;
 use App\Http\Controllers\Api\StudentDashboardController;
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::post('/register-parent', [RegistrationController::class, 'registerParent']);
 Route::post('/register-student', [RegistrationController::class, 'registerStudent']);
+
+Route::get('/articles', [\App\Http\Controllers\Api\ArticleController::class, 'index']);
+Route::get('/articles/{slug}', [\App\Http\Controllers\Api\ArticleController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -27,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('student')->group(function () {
         Route::get('/profile', [StudentDashboardController::class, 'profile']);
         Route::get('/modules', [StudentDashboardController::class, 'modules']);
+        Route::get('/modules/{module}/download', [StudentDashboardController::class, 'download']);
         Route::get('/registrations', [StudentDashboardController::class, 'registrations']);
     });
 });
