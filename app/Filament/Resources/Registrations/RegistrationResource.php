@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\Registrations;
 
 use App\Filament\Resources\Registrations\Pages\ManageRegistrations;
+use App\Models\ProgramClass;
 use App\Models\Registration;
+use Carbon\Carbon;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -34,6 +36,10 @@ class RegistrationResource extends Resource
                     ->relationship('program', 'name')
                     ->required()
                     ->label('Program'),
+                \Filament\Forms\Components\Select::make('program_class_id')
+                    ->relationship('programClass', 'name')
+                    ->label('Kelas')
+                    ->placeholder('Pilih kelas (opsional)'),
                 \Filament\Forms\Components\Select::make('status')
                     ->options([
                         'pending' => 'Pending',
@@ -65,6 +71,11 @@ class RegistrationResource extends Resource
                     ->label('Program')
                     ->searchable()
                     ->sortable(),
+                \Filament\Tables\Columns\TextColumn::make('programClass.name')
+                    ->label('Kelas')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('-'),
                 \Filament\Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -87,7 +98,35 @@ class RegistrationResource extends Resource
                     ->label('Approve')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->action(fn ($record) => $record->update(['status' => 'approved']))
+                    ->action(function ($record) {
+                        $student = $record->student;
+                        $age = Carbon::parse($student->birth_date)->age;
+
+                        // Find matching class based on age and program
+                        $matchedClass = ProgramClass::where('program_id', $record->program_id)
+                            ->where('min_age', '<=', $age)
+                            ->where('max_age', '>=', $age)
+                            ->first();
+
+                        $record->update([
+                            'status' => 'approved',
+                            'program_class_id' => $matchedClass?->id,
+                        ]);
+
+                        if ($matchedClass) {
+                            \Filament\Notifications\Notification::make()
+                                ->success()
+                                ->title('Pendaftaran Disetujui')
+                                ->body("Siswa {$student->full_name} (usia {$age} tahun) ditempatkan di kelas: {$matchedClass->name}")
+                                ->send();
+                        } else {
+                            \Filament\Notifications\Notification::make()
+                                ->warning()
+                                ->title('Pendaftaran Disetujui')
+                                ->body("Siswa {$student->full_name} (usia {$age} tahun) disetujui, tetapi tidak ada kelas yang sesuai dengan usianya.")
+                                ->send();
+                        }
+                    })
                     ->requiresConfirmation()
                     ->hidden(fn ($record) => $record->status === 'approved'),
                 \Filament\Actions\Action::make('reject')

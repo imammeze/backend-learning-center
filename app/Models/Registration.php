@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Student;
+use App\Models\Program;
+use App\Models\ProgramClass;
 
 class Registration extends Model
 {
@@ -13,6 +16,7 @@ class Registration extends Model
     protected $fillable = [
         'student_id',
         'program_id',
+        'program_class_id',
         'status',
         'registered_at',
         'notes',
@@ -30,5 +34,10 @@ class Registration extends Model
     public function program()
     {
         return $this->belongsTo(Program::class);
+    }
+
+    public function programClass()
+    {
+        return $this->belongsTo(ProgramClass::class);
     }
 }
